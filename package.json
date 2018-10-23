@@ -1,0 +1,30 @@
+{
+  "name": "asyncrequest-manager-simple",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build":"tsc -p ./tsconfig.json",
+    "test": "node ./test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uioz/asyncrequest-manager-simple.git"
+  },
+  "author": {
+    "name": "uioz",
+    "email": "hzxbpld@163.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/uioz/asyncrequest-manager-simple/issues"
+  },
+  "homepage": "https://github.com/uioz/asyncrequest-manager-simple#readme",
+  "devDependencies": {
+    "typescript": "^3.1.3",
+    "@types/node": "^10.12.0"
+  },
+  "dependencies": {
+    "asyncrequest-simple": "^1.0.3"
+  }
+}
