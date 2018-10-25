@@ -36,9 +36,9 @@ export interface RequestManger {
  * 该接口描述了策略图
  */
 export interface Diagram {
-    stragegyName:string;
-    stragegyGroup?:string[]|false;
-    tryError?:boolean;
+    stragegyName: string;
+    stragegyGroup?: RunningDiagram[] | false;
+    tryError?: boolean;
 }
 
 /**
@@ -47,10 +47,10 @@ export interface Diagram {
  * 被策略图执行器依赖
  */
 export interface RunningDiagram {
-    hostName:string;
-    diagramName:string;
-    baseUrl:string;
-    diagrams:Diagram[];
+    readonly hostName: string;
+    readonly diagramName: string;
+    readonly baseUrl: string;
+    diagrams: Diagram[];
 }
 
 
@@ -58,49 +58,49 @@ export interface RunningDiagram {
  * 该接口描述了AsyncRequestManagerSimple类上如何挂载任务对象
  */
 export interface Tasks {
-    [hostName:string]:{
-        [diagramName:string]:RunningDiagram
-    }
+    [diagramName: string]: RunningDiagram;
 }
 
 /**
  * 该接口定义了策略函数参数的基础类型
  */
-interface StragegyInf {
-    hostName:string;
-    diagramName:string;
-    baseUrl:string;
+export interface StragegyInf {
+    hostName: string;
+    diagramName: string;
+    baseUrl: string;
 }
 /**
  * 该接口定义了策略函数钩子用于提供一系列操作
  */
-interface StragegyHandle{
+export interface StragegyHandle {
     /**
      * 结果集
      */
-    result:object;
+    result: object;
     /**
      * 上个策略组传入的参数
      */
-    arguments:object;
+    arguments: object;
     /**
-     * 递归参数由上次递归的函数传入
-     */
-    recursionArgs?:any;
-    /**
-     * 递归自己一次,返回的参数交由下一次的recursionArgs
-     */
-    recursion:(...args)=>void;
-    /**
-     * 由之前的并发传入
-     */
-    concurrencyArgs:any;
-    /**
-     * 并发自己多次,第一个参数是并发的数量
+     * 要求停止进行递归的钩子
      * 
-     * 后续的多个参数按照顺序传给
+     * 如果该属性变为了函数也就意味着前一个策略函数要求拥有该钩子的策略函数进行递归
      */
-    concurrency:(processNum:number,...args)=>void;
+    stopRecursion: (() => void)|false;
+    /**
+     * 要求下一个策略函数进行递归调用
+     * 
+     * 这里的参数将原封不动的传入下一个策略函数中
+     */
+    recursion: (...args) => void;
+    /**
+     * 要求下一个策略函数进行并发
+     * 
+     * 提供给回调钩子多少个参数,就并发多少个下一个策略函数
+     * 
+     * 提供的参数将原封不动的提供给并发函数
+     */
+    concurrency: (...args) => void;
 }
 
 /**
@@ -108,15 +108,15 @@ interface StragegyHandle{
  * 
  */
 export interface Stragegy {
-    (Handle:StragegyHandle,base:StragegyInf):Promise<any>;
+    (Handle: StragegyHandle, base: StragegyInf): Promise<any>;
 }
 
 /**
  * 该接口描述了AsyncRequestManagerSimple如何挂载策略对象
  */
 export interface StragegyTree {
-    [hostName:string]:{
-        [strageName:string]:Stragegy
+    [hostName: string]: {
+        [strageName: string]: Stragegy
     }
 }
 

@@ -1,11 +1,15 @@
-import { StragegyTree,Tasks,keyType,RunningDiagram,RequestTask, Diagram } from "./types";
+import { StragegyTree,Tasks,keyType,RunningDiagram,RequestTask } from "./types";
 
 /**
  * 针对AsyncRequestManagerSimple制作的工具类,主要负责数据初始化
  */
 export class Tool {
 
-    constructor(){}
+    private runningDiagramTree:Tasks;
+
+    constructor(tasks:Tasks){
+        this.runningDiagramTree = tasks;
+    }
 
     public getObj():object{
         return {};
@@ -21,6 +25,14 @@ export class Tool {
 
     public hasParam<T extends object>(obj:T,name:keyType):boolean{
         return !!obj[name];
+    }
+
+    /**
+     * 获取可执行策略图
+     * @param runningDiagramName 可执行策略图的名称
+     */
+    public getRunningDiagram(runningDiagramName:keyType):RunningDiagram{
+        return this.runningDiagramTree[runningDiagramName];
     }
 
     /**

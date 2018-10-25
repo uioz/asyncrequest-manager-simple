@@ -15,14 +15,14 @@ export class AsyncRequestManagerSimple {
      * @param requestModule 请求模块
      */
     constructor(requestModule:RequestManger){
-        // 挂载执行器
-        this.dispatchers = new Dispatchers(requestModule);
-        // 挂载工具类
-        this.tools = new Tool();
         // 挂载策略树
         this.stragegyTree = this.tools.getInitActionTree();
         // 挂载任务树
         this.tasks = this.tools.getInitTasks();
+        // 挂载工具类
+        this.tools = new Tool(this.tasks);
+        // 挂载执行器
+        this.dispatchers = new Dispatchers(requestModule,this.tools);
     }
 
     /**
@@ -74,26 +74,14 @@ export class AsyncRequestManagerSimple {
      * 
      * 该策略图中提供多个策略函数的组合
      * 
-     * 不过需要注意的是策略函数只能是同域下的策略函数
      * @param diagram 策略图
      */
     public use(diagram:RunningDiagram):void{
 
-        const tasks = this.tasks;
+        let tasks = this.tasks;
 
-        if(this.tools.hasParam(tasks,diagram.hostName)){
-
-            this.tasks[diagram.hostName] = Object.assign(tasks[diagram.hostName],{
-                [diagram.diagramName]:diagram
-            });
-            
-            return;
-        }
-
-        this.tasks = Object.assign(tasks,{
-            [diagram.hostName]:{
-                [diagram.diagramName]:diagram
-            }
+        tasks = Object.assign(tasks,{
+            [diagram.diagramName]:diagram
         });
 
         return;
@@ -102,9 +90,9 @@ export class AsyncRequestManagerSimple {
     /**
      * execute
      */
-    public execute(hostName:keyType,diagramName:keyType) {
+    public execute(diagramName:keyType) {
 
-        return this.dispatchers.execute(this.stragegyTree[hostName],this.tasks[hostName][diagramName]);
+        return this.dispatchers.execute(diagramName);
     }
     
 }
