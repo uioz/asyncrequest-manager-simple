@@ -1,4 +1,4 @@
-import { StragegyTree,Tasks,keyType,RunningDiagram,RequestTask } from "./types";
+import { StragegyTree,Tasks,keyType,RunningDiagram,RequestTask, Stragegy } from "./types";
 
 /**
  * 针对AsyncRequestManagerSimple制作的工具类,主要负责数据初始化
@@ -6,9 +6,11 @@ import { StragegyTree,Tasks,keyType,RunningDiagram,RequestTask } from "./types";
 export class Tool {
 
     private runningDiagramTree:Tasks;
+    private stragegyTree:StragegyTree;
 
-    constructor(tasks:Tasks){
+    constructor(tasks:Tasks,stragegyTree:StragegyTree){
         this.runningDiagramTree = tasks;
+        this.stragegyTree = stragegyTree;
     }
 
     public getObj():object{
@@ -35,14 +37,25 @@ export class Tool {
         return this.runningDiagramTree[runningDiagramName];
     }
 
-    /**
-     * 策略图内容补全,调用该方法会进行递归查找需要的属性.
-     * 
-     * 并且给属性设置默认值.
-     */
-    public diagramComplete(diagram:RunningDiagram){
+    public getStragegy(hostName:keyType,stragegyName:keyType):Stragegy{
+        return this.stragegyTree[hostName][stragegyName];
+    }
 
-        const diagrams = diagram.diagrams;
+    /**
+     * 可执行策略图内容补全,调用该方法会进行递归查找需要的属性.
+     * 
+     * 然后返回校验完成的可执行策略图
+     */
+    public diagramComplete(diagram:RunningDiagram):RunningDiagram{
+
+        const result:RunningDiagram = {
+            hostName:diagram.hostName,
+            diagramName:diagram.baseUrl,
+            baseUrl:diagram.baseUrl,
+            diagrams:diagram.diagrams
+        }
+
+        const diagrams = result.diagrams;
 
         for (const diagram of diagrams) {
 
@@ -53,7 +66,8 @@ export class Tool {
             diagram.tryError = !!diagram.tryError;
 
         }
-        
+
+        return result;
     }
 
     /**

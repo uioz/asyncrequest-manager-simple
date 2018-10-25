@@ -20,7 +20,7 @@ export class AsyncRequestManagerSimple {
         // 挂载任务树
         this.tasks = this.tools.getInitTasks();
         // 挂载工具类
-        this.tools = new Tool(this.tasks);
+        this.tools = new Tool(this.tasks,this.stragegyTree);
         // 挂载执行器
         this.dispatchers = new Dispatchers(requestModule,this.tools);
     }
@@ -76,12 +76,14 @@ export class AsyncRequestManagerSimple {
      * 
      * @param diagram 策略图
      */
-    public use(diagram:RunningDiagram):void{
+    public use(runningDiagram:RunningDiagram):void{
+
+        runningDiagram = this.tools.diagramComplete(runningDiagram);
 
         let tasks = this.tasks;
 
         tasks = Object.assign(tasks,{
-            [diagram.diagramName]:diagram
+            [runningDiagram.diagramName]:runningDiagram
         });
 
         return;

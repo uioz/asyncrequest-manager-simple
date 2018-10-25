@@ -1,29 +1,15 @@
 
-let flag = true;
-
-const handle = {
-    change(content){
-        console.log(this);
-        console.log(content);
-    }
-}
-
-
-async function ready(handle) {
+async function test() {
     
-    const a = new Promise((resolve, reject) => {
-
+    let a = new Promise((resolve,reject)=>{
         setTimeout(() => {
-            resolve('hello world!');
+            resolve('hello world')
         }, 3000);
-
     });
 
-    handle.change(false);
+    let b = await a;
 
-    let result = await a;
-
-    handle.change(result);
+    
 }
 
-console.log(ready(handle));
+test().then(result=>console.log(result)).catch(error=>console.log(error));
