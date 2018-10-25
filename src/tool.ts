@@ -1,4 +1,5 @@
-import { StragegyTree,Tasks,keyType,RunningDiagram,RequestTask, Stragegy } from "./types";
+import { StragegyTree,Tasks,keyType,RunningDiagram,RequestTask, Stragegy,RequestManger } from "./types";
+import { Dispatchers } from "./Dispatchers";
 
 /**
  * 针对AsyncRequestManagerSimple制作的工具类,主要负责数据初始化
@@ -7,10 +8,12 @@ export class Tool {
 
     private runningDiagramTree:Tasks;
     private stragegyTree:StragegyTree;
+    private requestManager:RequestManger;
 
-    constructor(tasks:Tasks,stragegyTree:StragegyTree){
+    constructor(tasks:Tasks,stragegyTree:StragegyTree,requestModule:RequestManger){
         this.runningDiagramTree = tasks;
         this.stragegyTree = stragegyTree;
+        this.requestManager = this.requestManager;
     }
 
     public getObj():object{
@@ -37,8 +40,20 @@ export class Tool {
         return this.runningDiagramTree[runningDiagramName];
     }
 
+    /**
+     * 获取指定信息的策略函数
+     * @param hostName 域名名词
+     * @param stragegyName 策略名称
+     */
     public getStragegy(hostName:keyType,stragegyName:keyType):Stragegy{
         return this.stragegyTree[hostName][stragegyName];
+    }
+
+    /**
+     * 以工厂模式返回一个可执行策略图运行器
+     */
+    public getDispatchers () {
+        return new Dispatchers(this);
     }
 
     /**

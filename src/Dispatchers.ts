@@ -6,11 +6,9 @@ import { Tool } from "./tool";
  */
 export class Dispatchers {
 
-    private requestManger: RequestManger;
     private tools: Tool;
 
-    constructor(requestModule: RequestManger, tools: Tool) {
-        this.requestManger = requestModule;
+    constructor(tools: Tool) {
         this.tools = tools;
     }
 
@@ -25,8 +23,8 @@ export class Dispatchers {
         interface exceptionMod {
             [key: string]: boolean;
             isRecursion: boolean;
-            isRoncurrency: boolean;
-            isFail:boolean;
+            isConcurrent: boolean;
+            isFail: boolean;
         };
 
         /**
@@ -34,8 +32,8 @@ export class Dispatchers {
          */
         const flag: exceptionMod = {
             isRecursion: false,
-            isRoncurrency: false,
-            isFail:false
+            isConcurrent: false,
+            isFail: false
         };
 
         /**
@@ -74,13 +72,20 @@ export class Dispatchers {
             arguments: {},
             stopRecursion: false,
             recursion: () => {
-                flag.isRecursion=true;
+                if (flag.isFail || flag.isRecursion) {
+                    return;
+                }
+                flag.isRecursion = true;
             },
             concurrency: () => {
-                flag.isRoncurrency=true;
+                if (flag.isFail || flag.isConcurrent) {
+                    return;
+                }
+                flag.isConcurrent = true;
             },
-            fail:()=>{
-                flag.isFail=true;
+            fail: () => {
+                flag.isConcurrent = flag.isRecursion = false;
+                flag.isFail = true;
             }
         };
 
@@ -89,31 +94,72 @@ export class Dispatchers {
         while (i < len) {
 
             const diagram: Diagram = diagrams[i];
-            const stragegy = this.tools.getStragegy(baseInf.hostName, diagram.stragegyName)
+            const stragegy:Stragegy = this.tools.getStragegy(baseInf.hostName, diagram.stragegyName)
             // 获取请求内容
-            const result = await stragegy(handle, baseInf);
-            
-            if(flag.isFail){
+            let result = await stragegy(handle, baseInf);
 
-                if(diagram.tryError){
-                    flag.isFail=false;
+            if (flag.isFail) {
+
+                flag.isFail = false;
+
+                // 如果没有备用组又没有tryError
+                if (!diagram.stragegyGroup && diagram.tryError) {
+                    // 抛出异步资源错误
+                    throw new Error('ERR_ASYNC_TYPE');
+                }
+
+                // 有任务组执行任务组
+                if (Array.isArray(diagram.stragegyGroup)) {
+
+                    let k = 0, l = diagram.stragegyGroup.length;
+
+                    while (k < l) {
+
+                        try {
+                            // 如果没有报错则获取返回结果且赋值并停止循环
+                            result = await this.execute(diagram.stragegyGroup[k].diagramName)
+                            break;
+                        } catch (error) {
+                            if (k == l - 1) {
+                                // 如果到了最后一次还没有结果但是有tryError
+                                if (diagram.tryError) {
+                                    break;
+                                }
+                                throw new Error(`ERR_ASYNC_TYPE${error}`);
+                            }
+                        }
+
+                        k++;
+                    }
+
+                } else if (diagram.tryError) {
+                    // 直接跳过循环
                     i++;
                     continue;
                 }
-                // TODO 规范错误抛出
-                throw new Error()
-                
+
             }
 
             // 如果是递归则递归处理
             if (flag.isRecursion) {
 
-            }
-            // 如果是并发则并发处理
-            if (flag.isRoncurrency) {
+                i++;
+                if (i => len) {
+                    throw new Error(`ERR_ASYNC_TYPE  Can't use recursion mode of last task.`);
+                }
+
+                const nextStragegy = 
+
+                handle.stopRecursion = () => {  };
+
 
             }
-            
+            // 如果是并发则并发处理
+            if (flag.isConcurrent) {
+
+            }
+
+            handle.arguments = result;
 
             i++;
         }

@@ -93,9 +93,9 @@ export interface StragegyHandle {
      * 要求当前策略函数进行递归调用.
      * 
      * reutrn(async)或者resolve()返回的值将会传入下一次自己的递归调用中.
-     * 在递归过程中该选项则会变为false.
+     * 在递归过程调用该函数无效.
      */
-    recursion: () => void|false;
+    recursion: () => void;
     /**
      * 要求下一个策略函数进行并发
      * 
@@ -107,7 +107,9 @@ export interface StragegyHandle {
      * 调用该函数后则会停止这个策略函数,返回的结果也会抛弃.
      * 
      * 如果调用该方法的策略函数挂载的策略图上tryError属性为true则不会报错.
-     * 会跳过这个策略函数,反之就会报错.
+     * 会跳过这个策略函数,并且执行他的替代任务图如果有的话.
+     * 
+     * **注意**:只要是调用了fail无论先后在调用recursion和concurrency都是不起作用的.
      */
     fail:()=>void;
 }

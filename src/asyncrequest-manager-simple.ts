@@ -20,9 +20,9 @@ export class AsyncRequestManagerSimple {
         // 挂载任务树
         this.tasks = this.tools.getInitTasks();
         // 挂载工具类
-        this.tools = new Tool(this.tasks,this.stragegyTree);
+        this.tools = new Tool(this.tasks,this.stragegyTree,requestModule);
         // 挂载执行器
-        this.dispatchers = new Dispatchers(requestModule,this.tools);
+        this.dispatchers = new Dispatchers(this.tools);
     }
 
     /**
