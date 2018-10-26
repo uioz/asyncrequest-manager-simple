@@ -37,7 +37,7 @@ export interface RequestManger {
  */
 export interface Diagram {
     stragegyName: string;
-    stragegyGroup?: RunningDiagram[] | false;
+    stragegyGroup?: string[] | false;
     tryError?: boolean;
 }
 
@@ -74,10 +74,6 @@ export interface StragegyInf {
  */
 export interface StragegyHandle {
     /**
-     * 结果集
-     */
-    result: object;
-    /**
      * 上个策略组传入的参数
      */
     arguments: object;
@@ -112,6 +108,12 @@ export interface StragegyHandle {
      * **注意**:只要是调用了fail无论先后在调用recursion和concurrency都是不起作用的.
      */
     fail:()=>void;
+    /**
+     * 获取作为结果的对象,可以为其挂载任何属性
+     * 
+     * **注意**:一旦调用recursion或concurrency或fail钩子后就不会返回可对象了
+     */
+    getResult:()=>object|false;
 }
 
 /**

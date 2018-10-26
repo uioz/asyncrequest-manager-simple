@@ -1,5 +1,5 @@
 import { StragegyTree,Tasks,keyType,RunningDiagram,RequestTask, Stragegy,RequestManger } from "./types";
-import { Dispatchers } from "./Dispatchers";
+import { Dispatchers } from "./DIspatchersPush";
 
 /**
  * 针对AsyncRequestManagerSimple制作的工具类,主要负责数据初始化
