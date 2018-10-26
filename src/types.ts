@@ -105,7 +105,6 @@ export interface StragegyHandle {
      * 如果调用该方法的策略函数挂载的策略图上tryError属性为true则不会报错.
      * 会跳过这个策略函数,并且执行他的替代任务图如果有的话.
      * 
-     * **注意**:只要是调用了fail无论先后在调用recursion和concurrency都是不起作用的.
      */
     fail:()=>void;
     /**
@@ -119,9 +118,12 @@ export interface StragegyHandle {
 /**
  * 该接口定义了策略函数.
  * 
+ * 策略函数必须是一个异步函数或者Promise,返回的内容必须是一个对象,不能是其他值.
+ * 
+ * 当调用钩子函数后返回的值就会有特殊意义,详细情况看StragegyHandle的定义
  */
 export interface Stragegy {
-    (Handle: StragegyHandle, base: StragegyInf): Promise<any>;
+    (Handle: StragegyHandle, base: StragegyInf): Promise<object>;
 }
 
 /**
