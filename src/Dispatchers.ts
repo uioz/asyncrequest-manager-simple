@@ -27,33 +27,40 @@ export class Dispatchers {
     }
 
     private baseInf: StragegyInf;
-
     private handle: StragegyHandle = {
         arguments: {},
         stopRecursion: false,
         recursion: () => {
-            if (this.flag.isFail || this.flag.isRecursion) {
+            if (this.flag.isFail || this.flag.isRecursion || this.flag.isConcurrent) {
                 return;
             }
             this.flag.isRecursion = true;
         },
         concurrency: () => {
-            if (this.flag.isFail || this.flag.isRecursion) {
+            if (this.flag.isFail || this.flag.concurrency) {
                 return;
             }
             this.flag.isConcurrent = true;
         },
-        fail: () => {
+        fail: (message:string) => {
             if (this.flag.isFail) {
                 return;
             }
+            this.flag.isConcurrent = this.flag.isRecursion = false;
             this.flag.isFail = true;
+            throw new Error(message?message:'Custom Error');
         },
         getResult: () => {
-            if (this.flag.isFail || this.flag.isConcurrent || this.flag.isRecursion) {
+            if (this.flag.isFail) {
                 return false;
             }
             return this.result;
+        },
+        setResult: (data: any) => {
+            if (this.flag.isFail) {
+                return false;
+            }
+            this.result = data;
         }
     };
 
@@ -154,23 +161,25 @@ export class Dispatchers {
      * @param Arguments 参数对象
      * @param error catch中提供的信息
      */
-    private async failProcess(diagram: Diagram, Arguments: object, error?) {
+    private async failProcess(diagram: Diagram, Arguments: object, error?):Promise<object> {
 
         this.flag.isFail = false;
 
         if (!diagram.tryError) {
             if (error) {
-                throw new Error(error);
+                throw error;
             }
-            throw new Error(`ERR_ASYNC_TYPE ${error ? error : ''}`);
+            throw `ERR_ASYNC_TYPE ${error ? error : ''}`;
         }
 
+        const defaultReturn = {};
+
         // 如果有备选可执行策略图就执行
-        if (Array.isArray(diagram.stragegyGroup)) {
+        if (Array.isArray(diagram.runningDiagramGroup)) {
 
             try {
 
-                return await this.groupProcess(diagram.stragegyGroup as string[], Arguments);
+                return await this.groupProcess(diagram.runningDiagramGroup as string[], Arguments);
 
             } catch (error) {
 
@@ -178,12 +187,12 @@ export class Dispatchers {
                     throw error;
                 }
 
-                return {};
+                return defaultReturn;
 
             }
 
         } else {
-            return {};
+            return defaultReturn;
         }
 
     }
@@ -191,8 +200,12 @@ export class Dispatchers {
 
     private async concurrentProcess(stragegyFun: Stragegy, Arguments: any[]): Promise<object> {
 
-        // 先收回flag防止并发再次调用并发
+        // 先收回flag允许并发再次调用并发
         this.flag.isConcurrent = false;
+
+        // 抹消递归钩子的功能
+        const recursionBackup = this.handle.recursion;
+        this.handle.recursion = ()=>false;
 
         let collection: Promise<Object>[] = [],
             resultCollection = [];
@@ -211,6 +224,9 @@ export class Dispatchers {
 
         }
 
+        // 恢复递归钩子的功能
+        this.handle.recursion = recursionBackup;
+
         return Object.assign({}, ...resultCollection);
     }
 
@@ -223,9 +239,8 @@ export class Dispatchers {
      */
     private async Process(diagram: Diagram, Arguments: object | any[]): Promise<object | any[]> {
 
-        const stragegyFun: Stragegy = this.tools.getStragegy(this.runingDiagram.hostName, this.runingDiagram.diagramName);
-
-
+        const stragegyFun: Stragegy = this.tools.getStragegy(this.runingDiagram.hostName, diagram.stragegyName);
+        this.handle.arguments = Arguments;
 
         // 先判断是否为并发处理,之所以在这里判断是因为,并发是上一个策略函数交由本次执行的
         if (this.flag.isConcurrent) {
@@ -301,10 +316,13 @@ export class Dispatchers {
         this.runingDiagram = this.tools.getRunningDiagram(runningDiagramName);
         // 挂载策略函数组
         this.diagrams = this.runingDiagram.diagrams;
+
         // 挂载基本信息
-        this.baseInf.baseUrl = this.runingDiagram.baseUrl;
-        this.baseInf.diagramName = this.runingDiagram.diagramName;
-        this.baseInf.hostName = this.runingDiagram.hostName;
+        this.baseInf = {
+            baseUrl:this.runingDiagram.baseUrl,
+            diagramName:this.runingDiagram.RunningDiagramName,
+            hostName:this.runingDiagram.hostName
+        };
 
         let i = 0, len = this.diagrams.length;
 
@@ -316,7 +334,7 @@ export class Dispatchers {
              * 此外使用tryError后不会返回结果,即下一个策略函数就没有参数.
              * 如果使用了备选可执行任务图均失败且使用了tryError则也不会报错.
              */
-            Arguments = this.Process(this.diagrams[i], Arguments);
+            Arguments = await this.Process(this.diagrams[i], Arguments);
 
             i++;
         }

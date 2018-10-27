@@ -1,100 +1,80 @@
-import { StragegyTree, Tasks, keyType, RunningDiagram, RequestTask, Stragegy, RequestManger } from "./types";
-import { Dispatchers } from "./Dispatchers";
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const Dispatchers_1 = require("./Dispatchers");
 /**
  * 针对AsyncRequestManagerSimple制作的工具类
  */
-export class Tool {
-
-    private runningDiagramTree: Tasks;
-    private stragegyTree: StragegyTree;
-    private requestManager: RequestManger;
-
-    constructor(tasks: Tasks, stragegyTree: StragegyTree) {
+class Tool {
+    constructor(tasks, stragegyTree) {
         this.runningDiagramTree = tasks;
         this.stragegyTree = stragegyTree;
         this.requestManager = this.requestManager;
     }
-
-    public getObj(): object {
+    getObj() {
         return {};
     }
-
-    public getInitActionTree() {
-        return this.getObj() as StragegyTree;
+    getInitActionTree() {
+        return this.getObj();
     }
-
-    public getInitTasks() {
-        return this.getObj() as Tasks;
+    getInitTasks() {
+        return this.getObj();
     }
-
-    public hasParam<T extends object>(obj: T, name: keyType): boolean {
+    hasParam(obj, name) {
         return !!obj[name];
     }
-
     /**
      * 获取可执行策略图
      * @param runningDiagramName 可执行策略图的名称
      */
-    public getRunningDiagram(runningDiagramName: keyType): RunningDiagram {
+    getRunningDiagram(runningDiagramName) {
         try {
             return this.runningDiagramTree[runningDiagramName];
-        } catch (error) {
+        }
+        catch (error) {
             throw new Error(`cannot found ${runningDiagramName} of runningDiagram in AsyncRequestManagerSimple!`);
         }
     }
-
     /**
      * 获取指定信息的策略函数
      * @param hostName 域名名词
      * @param stragegyName 策略名称
      */
-    public getStragegy(hostName: keyType, stragegyName: keyType): Stragegy {
+    getStragegy(hostName, stragegyName) {
         return this.stragegyTree[hostName][stragegyName];
     }
-
     /**
      * 以工厂模式返回一个可执行策略图运行器
      */
-    public getDispatchers() {
-        return new Dispatchers(this);
+    getDispatchers() {
+        return new Dispatchers_1.Dispatchers(this);
     }
-
     /**
      * 可执行策略图内容补全,调用该方法会进行递归查找需要的属性.
-     * 
+     *
      * 然后返回校验完成的可执行策略图
      */
-    public diagramComplete(diagram: RunningDiagram): RunningDiagram {
-
-        const result: RunningDiagram = {
+    diagramComplete(diagram) {
+        const result = {
             hostName: diagram.hostName,
             RunningDiagramName: diagram.RunningDiagramName,
             baseUrl: diagram.baseUrl,
             diagrams: diagram.diagrams
-        }
-
+        };
         const diagrams = result.diagrams;
-
         for (const diagram of diagrams) {
-
             if (!diagram.runningDiagramGroup) {
                 diagram.runningDiagramGroup = false;
             }
-
             diagram.tryError = !!diagram.tryError;
-
         }
-
         return result;
     }
-
     /**
      * 策略图内容补全,调用该方法会进行递归查找需要的属性.
-     * 
+     *
      * 并且给属性设置默认值.
      */
-    public requestTaskComplete(requestTask: RequestTask) {
-
+    requestTaskComplete(requestTask) {
     }
 }
+exports.Tool = Tool;
