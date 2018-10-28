@@ -9,23 +9,19 @@ const timeOutPro = ()=>{
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve('done');
-        }, 3000);
+        }, 500);
     });
 };
 
-// Demo.registerStragegy(hostName,'demo4',async (handle,inf)=>{
-//     console.log(handle,inf)
-//     return {
-//         result:'done'
-//     }
-// });
 
 Demo.registerStragegyTree({
     [hostName]: {
         'demo1':async (handle, inf) => {
-            console.warn(1);
+            
+            console.warn('step 1');
+            console.log(handle.arguments.num+'\n');
         
-            await timeOutPro;
+            await timeOutPro();
         
             return Object.assign(handle.arguments,{
                 num:1
@@ -33,40 +29,38 @@ Demo.registerStragegyTree({
         
         },
         'demo2':async (handle, inf) => {
-            console.warn(2);
-        
-            await timeOutPro;
-        
-            throw new Error('Simulation Error');
-        
+
+            if(handle.arguments.num == 1){
+                handle.recursion();
+            }else if(handle.arguments.num ==10 ) {
+                handle.stopRecursion();
+                debugger;
+            }
+
+            console.warn('step 2');
+            console.log(handle.arguments.num+'\n');
+
+            await timeOutPro();
+
             return Object.assign(handle.arguments,{
-                num:2
+                num:++handle.arguments.num
             });
         
         },
         'demo3': async (handle, inf) => {
-            console.warn(3);
 
-            await timeOutPro;
+            console.log('step 3');
+            console.log(handle.arguments.num+'\n');
+
+            await timeOutPro();
 
             return Object.assign(handle.arguments,{
-                num:3
+                num:++handle.arguments.num
             });
 
         }
     }
 });
-
-Demo.use({
-    hostName:'www.baidu.com',
-    RunningDiagramName:'testBackup',
-    baseUrl:'http://www.baidu.com/',
-    diagrams:[
-        {
-            stragegyName:'demo4'
-        }
-    ]
-})
 
 Demo.use({
     hostName:'www.baidu.com',
@@ -78,10 +72,6 @@ Demo.use({
         },
         {
             stragegyName:'demo2',
-            runningDiagramGroup:[
-                'testBackup'
-            ],
-            tryError:true
         },
         {
             stragegyName:'demo3',
@@ -89,4 +79,6 @@ Demo.use({
     ]
 });
 
-Demo.execute('test');
+Demo.execute('test').then((result)=>{
+    console.log(result);
+});

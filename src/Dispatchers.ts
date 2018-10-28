@@ -19,6 +19,7 @@ export class Dispatchers {
     private tools: Tool;
 
     private result: object = {};
+    private errorMessage:string = 'Custom Error!';
 
     private flag: exceptionMod = {
         isRecursion: false,
@@ -48,7 +49,7 @@ export class Dispatchers {
             }
             this.flag.isConcurrent = this.flag.isRecursion = false;
             this.flag.isFail = true;
-            throw new Error(message ? message : 'Custom Error');
+            this.errorMessage = message;
         },
         getResult: () => {
             if (this.flag.isFail) {
@@ -138,11 +139,10 @@ export class Dispatchers {
         while (this.flag.isRecursion) {
 
             returnArguments = await stragegyFun(this.handle, this.baseInf);
-
             // 调用fail 直接throw Error
             if (this.flag.isFail) {
                 this.flag.isFail = true;
-                throw new Error(`ERR_ASYNC_TYPE`);
+                throw new Error(this.errorMessage);
             }
 
             this.handle.arguments = returnArguments;
@@ -183,6 +183,8 @@ export class Dispatchers {
 
                 return defaultReturn;
 
+            }finally{
+                this.errorMessage = 'Custom Error!';
             }
 
         } else if (!diagram.tryError) {
@@ -194,9 +196,9 @@ export class Dispatchers {
             throw `ERR_ASYNC_TYPE ${error ? error : ''}`;
 
         } else {
-
+            this.errorMessage = 'Custom Error!';
             return defaultReturn;
-            
+
         }
 
     }
@@ -215,7 +217,13 @@ export class Dispatchers {
             resultCollection = [];
 
         for (const Argument of Arguments) {
+            this.handle.arguments = Argument;
             collection.push(stragegyFun(this.handle, this.baseInf));
+            if(this.flag.isFail){
+                // 恢复递归钩子的功能
+                this.handle.recursion = recursionBackup;
+                throw new Error(this.errorMessage);
+            }
         }
 
         for (const result of collection) {
@@ -223,13 +231,11 @@ export class Dispatchers {
             resultCollection.push(await result);
 
             if (this.flag.isFail) {
-                throw new Error(`ERR_ASYNC_TYPE`);
+                // 恢复递归钩子的功能
+                this.handle.recursion = recursionBackup;
+                throw new Error(this.errorMessage);
             }
-
         }
-
-        // 恢复递归钩子的功能
-        this.handle.recursion = recursionBackup;
 
         return Object.assign({}, ...resultCollection);
     }
@@ -276,6 +282,10 @@ export class Dispatchers {
              * 递归或者并发返回undefined或者[...Arguments]
              */
             returnArguments = await stragegyFun(this.handle, this.baseInf);
+
+            if(this.flag.isFail){
+                throw new Error(this.errorMessage);
+            }
 
         } catch (error) {
 

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build":"tsc -p ./tsconfig.json",
-    "test": "node ./test/test.js"
+    "test": "node ./test/groupAndErrorTest.js"
   },
   "repository": {
     "type": "git",
@@ -19,6 +19,7 @@
   "bugs": {
     "url": "https://github.com/uioz/asyncrequest-manager-simple/issues"
   },
+  "types":"./src/asyncrequest-manager-simple.ts",
   "homepage": "https://github.com/uioz/asyncrequest-manager-simple#readme",
   "devDependencies": {
     "typescript": "^3.1.3",

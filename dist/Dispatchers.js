@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class Dispatchers {
     constructor(tools) {
         this.result = {};
+        this.errorMessage = 'Custom Error!';
         this.flag = {
             isRecursion: false,
             isConcurrent: false,
@@ -33,7 +34,7 @@ class Dispatchers {
                 }
                 this.flag.isConcurrent = this.flag.isRecursion = false;
                 this.flag.isFail = true;
-                throw new Error(message ? message : 'Custom Error');
+                this.errorMessage = message;
             },
             getResult: () => {
                 if (this.flag.isFail) {
@@ -105,7 +106,7 @@ class Dispatchers {
             // 调用fail 直接throw Error
             if (this.flag.isFail) {
                 this.flag.isFail = true;
-                throw new Error(`ERR_ASYNC_TYPE`);
+                throw new Error(this.errorMessage);
             }
             this.handle.arguments = returnArguments;
         }
@@ -134,6 +135,9 @@ class Dispatchers {
                 }
                 return defaultReturn;
             }
+            finally {
+                this.errorMessage = 'Custom Error!';
+            }
         }
         else if (!diagram.tryError) {
             if (error) {
@@ -142,6 +146,7 @@ class Dispatchers {
             throw `ERR_ASYNC_TYPE ${error ? error : ''}`;
         }
         else {
+            this.errorMessage = 'Custom Error!';
             return defaultReturn;
         }
     }
@@ -153,16 +158,24 @@ class Dispatchers {
         this.handle.recursion = () => false;
         let collection = [], resultCollection = [];
         for (const Argument of Arguments) {
+            this.handle.arguments = Argument;
             collection.push(stragegyFun(this.handle, this.baseInf));
+            if (this.flag.isFail) {
+                // 恢复递归钩子的功能
+                this.handle.recursion = recursionBackup;
+                debugger
+                throw new Error(this.errorMessage);
+            }
         }
         for (const result of collection) {
             resultCollection.push(await result);
             if (this.flag.isFail) {
-                throw new Error(`ERR_ASYNC_TYPE`);
+                // 恢复递归钩子的功能
+                this.handle.recursion = recursionBackup;
+                debugger
+                throw new Error(this.errorMessage);
             }
         }
-        // 恢复递归钩子的功能
-        this.handle.recursion = recursionBackup;
         return Object.assign({}, ...resultCollection);
     }
     /**
@@ -183,6 +196,7 @@ class Dispatchers {
                     return await this.concurrentProcess(stragegyFun, Arguments);
                 }
                 catch (error) {
+                    debugger
                     return await this.failProcess(diagram, Arguments, error);
                 }
             }
@@ -198,6 +212,9 @@ class Dispatchers {
              * 递归或者并发返回undefined或者[...Arguments]
              */
             returnArguments = await stragegyFun(this.handle, this.baseInf);
+            if (this.flag.isFail) {
+                throw new Error(this.errorMessage);
+            }
         }
         catch (error) {
             returnArguments = await this.failProcess(diagram, Arguments, error);
