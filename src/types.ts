@@ -37,7 +37,7 @@ export interface RequestManger {
  */
 export interface Diagram {
     stragegyName: string;
-    stragegyGroup?: string[] | false;
+    runningDiagramGroup?: string[] | false;
     tryError?: boolean;
 }
 
@@ -48,7 +48,7 @@ export interface Diagram {
  */
 export interface RunningDiagram {
     readonly hostName: string;
-    readonly diagramName: string;
+    readonly RunningDiagramName: string;
     readonly baseUrl: string;
     diagrams: Diagram[];
 }
@@ -105,14 +105,20 @@ export interface StragegyHandle {
      * 如果调用该方法的策略函数挂载的策略图上tryError属性为true则不会报错.
      * 会跳过这个策略函数,并且执行他的替代任务图如果有的话.
      * 
+     * - 参数
+     *   - message 抛出错误的信息,默认Custom Error
      */
-    fail:()=>void;
+    fail:(message:string)=>void;
     /**
      * 获取作为结果的对象,可以为其挂载任何属性
      * 
      * **注意**:一旦调用recursion或concurrency或fail钩子后就不会返回可对象了
      */
     getResult:()=>object|false;
+    /**
+     * 设置一个结果会覆盖原有的结果
+     */
+    setResult:(data:any)=>void;
 }
 
 /**

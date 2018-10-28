@@ -5,8 +5,8 @@ import { Tool } from "./tool";
 
 export class AsyncRequestManagerSimple {
 
-    private stragegyTree:StragegyTree;
-    private tasks:Tasks;
+    private stragegyTree:StragegyTree = {};
+    private tasks:Tasks = {};
     private tools:Tool;
     private dispatchers:Dispatchers;
 
@@ -14,13 +14,9 @@ export class AsyncRequestManagerSimple {
      * 简单爬虫器
      * @param requestModule 请求模块
      */
-    constructor(requestModule:RequestManger){
-        // 挂载策略树
-        this.stragegyTree = this.tools.getInitActionTree();
-        // 挂载任务树
-        this.tasks = this.tools.getInitTasks();
+    constructor(){
         // 挂载工具类
-        this.tools = new Tool(this.tasks,this.stragegyTree,requestModule);
+        this.tools = new Tool(this.tasks,this.stragegyTree);
         // 挂载执行器
         this.dispatchers = new Dispatchers(this.tools);
     }
@@ -83,7 +79,7 @@ export class AsyncRequestManagerSimple {
         let tasks = this.tasks;
 
         tasks = Object.assign(tasks,{
-            [runningDiagram.diagramName]:runningDiagram
+            [runningDiagram.RunningDiagramName]:runningDiagram
         });
 
         return;
@@ -92,9 +88,9 @@ export class AsyncRequestManagerSimple {
     /**
      * execute
      */
-    public execute(diagramName:keyType) {
+    public execute(runningDiagramName:keyType) {
 
-        return this.dispatchers.execute(diagramName);
+        return this.dispatchers.execute(runningDiagramName);
     }
     
 }
