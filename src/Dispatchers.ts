@@ -42,13 +42,13 @@ export class Dispatchers {
             }
             this.flag.isConcurrent = true;
         },
-        fail: (message:string) => {
+        fail: (message: string) => {
             if (this.flag.isFail) {
                 return;
             }
             this.flag.isConcurrent = this.flag.isRecursion = false;
             this.flag.isFail = true;
-            throw new Error(message?message:'Custom Error');
+            throw new Error(message ? message : 'Custom Error');
         },
         getResult: () => {
             if (this.flag.isFail) {
@@ -78,7 +78,7 @@ export class Dispatchers {
      * @param runingDiagrams 多个可执行策略图
      * @param Arguments 启动参数
      */
-    private async groupProcess(runingDiagrams: string[], Arguments: object): Promise<object> {
+    private async groupProcess(runingDiagrams: string[], Arguments: object, tryError: boolean): Promise<object> {
 
         const dispatcher = this.tools.getDispatchers();
 
@@ -90,14 +90,15 @@ export class Dispatchers {
                 // 只要挂载的值
                 return await dispatcher.execute(runingDiagrams[i], Arguments, this.result);
 
-            } catch {
-                // node 10支持不获取参数
-                // 执行直到获取到真正的结果
+            } catch (error) {
+                if (!tryError) {
+                    throw error;
+                }
             }
 
             i++;
 
-            if (i = len - 1) {
+            if (i = len) {
                 return {};
             }
         }
@@ -161,16 +162,9 @@ export class Dispatchers {
      * @param Arguments 参数对象
      * @param error catch中提供的信息
      */
-    private async failProcess(diagram: Diagram, Arguments: object, error?):Promise<object> {
+    private async failProcess(diagram: Diagram, Arguments: object, error?): Promise<object> {
 
         this.flag.isFail = false;
-
-        if (!diagram.tryError) {
-            if (error) {
-                throw error;
-            }
-            throw `ERR_ASYNC_TYPE ${error ? error : ''}`;
-        }
 
         const defaultReturn = {};
 
@@ -179,7 +173,7 @@ export class Dispatchers {
 
             try {
 
-                return await this.groupProcess(diagram.runningDiagramGroup as string[], Arguments);
+                return await this.groupProcess(diagram.runningDiagramGroup as string[], Arguments, diagram.tryError);
 
             } catch (error) {
 
@@ -191,8 +185,18 @@ export class Dispatchers {
 
             }
 
+        } else if (!diagram.tryError) {
+
+            if (error) {
+                throw error;
+            }
+
+            throw `ERR_ASYNC_TYPE ${error ? error : ''}`;
+
         } else {
+
             return defaultReturn;
+            
         }
 
     }
@@ -205,7 +209,7 @@ export class Dispatchers {
 
         // 抹消递归钩子的功能
         const recursionBackup = this.handle.recursion;
-        this.handle.recursion = ()=>false;
+        this.handle.recursion = () => false;
 
         let collection: Promise<Object>[] = [],
             resultCollection = [];
@@ -319,9 +323,9 @@ export class Dispatchers {
 
         // 挂载基本信息
         this.baseInf = {
-            baseUrl:this.runingDiagram.baseUrl,
-            diagramName:this.runingDiagram.RunningDiagramName,
-            hostName:this.runingDiagram.hostName
+            baseUrl: this.runingDiagram.baseUrl,
+            diagramName: this.runingDiagram.RunningDiagramName,
+            hostName: this.runingDiagram.hostName
         };
 
         let i = 0, len = this.diagrams.length;

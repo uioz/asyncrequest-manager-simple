@@ -56,7 +56,7 @@ class Dispatchers {
      * @param runingDiagrams 多个可执行策略图
      * @param Arguments 启动参数
      */
-    async groupProcess(runingDiagrams, Arguments) {
+    async groupProcess(runingDiagrams, Arguments, tryError) {
         const dispatcher = this.tools.getDispatchers();
         let i = 0, len = runingDiagrams.length;
         while (i < len) {
@@ -64,12 +64,13 @@ class Dispatchers {
                 // 只要挂载的值
                 return await dispatcher.execute(runingDiagrams[i], Arguments, this.result);
             }
-            catch (_a) {
-                // node 10支持不获取参数
-                // 执行直到获取到真正的结果
+            catch (error) {
+                if (!tryError) {
+                    throw error;
+                }
             }
             i++;
-            if (i = len - 1) {
+            if (i = len) {
                 return {};
             }
         }
@@ -121,17 +122,11 @@ class Dispatchers {
      */
     async failProcess(diagram, Arguments, error) {
         this.flag.isFail = false;
-        if (!diagram.tryError) {
-            if (error) {
-                throw error;
-            }
-            throw `ERR_ASYNC_TYPE ${error ? error : ''}`;
-        }
         const defaultReturn = {};
         // 如果有备选可执行策略图就执行
         if (Array.isArray(diagram.runningDiagramGroup)) {
             try {
-                return await this.groupProcess(diagram.runningDiagramGroup, Arguments);
+                return await this.groupProcess(diagram.runningDiagramGroup, Arguments, diagram.tryError);
             }
             catch (error) {
                 if (!diagram.tryError) {
@@ -139,6 +134,12 @@ class Dispatchers {
                 }
                 return defaultReturn;
             }
+        }
+        else if (!diagram.tryError) {
+            if (error) {
+                throw error;
+            }
+            throw `ERR_ASYNC_TYPE ${error ? error : ''}`;
         }
         else {
             return defaultReturn;
