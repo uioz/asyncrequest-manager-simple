@@ -4,7 +4,9 @@ let Demo = new AsyncRequestManagerSimple();
 
 const hostName = 'www.baidu.com';
 
-
+/**
+ * 被视为一个请求操作
+ */
 const timeOutPro = ()=>{
     return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -12,7 +14,7 @@ const timeOutPro = ()=>{
         }, 500);
     });
 };
-
+// 注册一组策略函数
 Demo.registerStragegyTree({
     [hostName]: {
         'demo1':async (handle, inf) => {
@@ -71,7 +73,7 @@ Demo.registerStragegyTree({
         }
     }
 });
-
+// 注册一个配置
 Demo.use({
     hostName:'www.baidu.com',
     RunningDiagramName:'test',
@@ -93,6 +95,7 @@ Demo.use({
     ]
 });
 
+// 注册一个策略函数
 Demo.registerStragegy(hostName,'demo4',async (handle,inf)=>{
 
     console.log('step 2');
@@ -103,7 +106,7 @@ Demo.registerStragegy(hostName,'demo4',async (handle,inf)=>{
     }
     
 });
-
+// 注册一个配置
 Demo.use({
     hostName:'www.baidu.com',
     RunningDiagramName:'testBackup',
@@ -115,7 +118,7 @@ Demo.use({
     ]
 });
 
-
+// 执行并且打印结果
 Demo.execute('test').then((result)=>{
     console.log('result = ',result);
 });

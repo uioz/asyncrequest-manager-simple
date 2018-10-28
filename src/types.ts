@@ -50,7 +50,7 @@ export interface RunningDiagram {
     readonly hostName: string;
     readonly RunningDiagramName: string;
     readonly baseUrl: string;
-    diagrams: Diagram[];
+    readonly diagrams: Diagram[];
 }
 
 
