@@ -67,10 +67,36 @@ class AsyncRequestManagerSimple {
         return;
     }
     /**
-     * execute
+     * 执行一个配置,并返回结果对象
+     * @param runningDiagramName 配置的名称
      */
     execute(runningDiagramName) {
         return this.dispatchers.execute(runningDiagramName);
+    }
+    /**
+     * 快速启动模式,直接执行策略函数
+     * @param stragegyFun 策略函数
+     */
+    async fastBoot(...stragegyFun) {
+        const hostName = 'fastBoot';
+        const functionName = 'stragegyFunction';
+        const runningDiagram = {
+            hostName,
+            RunningDiagramName: hostName,
+            baseUrl: 'unknow',
+            diagrams: []
+        };
+        let i = 0, len = stragegyFun.length;
+        while (i < len) {
+            const stragegyName = functionName + i;
+            this.registerStragegy(hostName, stragegyName, stragegyFun[i]);
+            runningDiagram.diagrams.push({
+                stragegyName
+            });
+            i++;
+        }
+        this.use(runningDiagram);
+        return this.execute(hostName);
     }
 }
 exports.AsyncRequestManagerSimple = AsyncRequestManagerSimple;

@@ -163,7 +163,6 @@ class Dispatchers {
             if (this.flag.isFail) {
                 // 恢复递归钩子的功能
                 this.handle.recursion = recursionBackup;
-                debugger
                 throw new Error(this.errorMessage);
             }
         }
@@ -172,7 +171,6 @@ class Dispatchers {
             if (this.flag.isFail) {
                 // 恢复递归钩子的功能
                 this.handle.recursion = recursionBackup;
-                debugger
                 throw new Error(this.errorMessage);
             }
         }
@@ -196,7 +194,6 @@ class Dispatchers {
                     return await this.concurrentProcess(stragegyFun, Arguments);
                 }
                 catch (error) {
-                    debugger
                     return await this.failProcess(diagram, Arguments, error);
                 }
             }

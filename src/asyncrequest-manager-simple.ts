@@ -1,6 +1,7 @@
 import { RequestManger,StragegyTree,Tasks,Stragegy,keyType,RunningDiagram } from "./types";
 import { Dispatchers } from "./Dispatchers";
 import { Tool } from "./tool";
+import { timingSafeEqual } from "crypto";
 
 
 export class AsyncRequestManagerSimple {
@@ -86,11 +87,47 @@ export class AsyncRequestManagerSimple {
     }
 
     /**
-     * execute
+     * 执行一个配置,并返回结果对象
+     * @param runningDiagramName 配置的名称
      */
-    public execute(runningDiagramName:keyType) {
+    public execute(runningDiagramName:keyType):Promise<any>{
 
         return this.dispatchers.execute(runningDiagramName);
+    }
+
+   /**
+    * 快速启动模式,直接执行策略函数
+    * @param stragegyFun 策略函数
+    */
+    public async fastBoot(...stragegyFun:Stragegy[]):Promise<any>{
+
+        const hostName = 'fastBoot';
+        const functionName = 'stragegyFunction';
+        const runningDiagram:RunningDiagram = {
+            hostName,
+            RunningDiagramName:hostName,
+            baseUrl:'unknow',
+            diagrams:[]
+        }
+
+        let i = 0 , len = stragegyFun.length;
+
+        while (i<len) {
+
+            const stragegyName = functionName+i;
+
+            this.registerStragegy(hostName,stragegyName,stragegyFun[i])
+            runningDiagram.diagrams.push({
+                stragegyName
+            });
+
+            i++;
+
+        }
+
+        this.use(runningDiagram);
+
+        return this.execute(hostName);
     }
     
 }
